@@ -18,9 +18,8 @@ We're bidding on a donor bus to convert into the tool library. Interior below:
 
 ## Interest form
 
-**DRAFT — not final.** Built by a community volunteer (public credit pending
-consent): https://forms.gle/PsyjstN4MgKhm5H8A
+Built by a community volunteer: https://forms.gle/PsyjstN4MgKhm5H8A
 
 ## Reach the project
 
-**keyholders@latoolb.us** — live now.
+**keyholders@latoolb.us** live now.
