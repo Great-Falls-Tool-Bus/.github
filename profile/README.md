@@ -10,13 +10,18 @@
 </div>
 
 
-## The donor bus
+## We won the bus! 🚌
 
-We're bidding on a donor bus to convert into the tool library. Interior below:
+The bid came through — the Tool Bus is real. Now we're getting it set up and
+situated as a shared tool library on wheels for Lewiston-Auburn, Maine.
+Interior below:
 
 <div align="center">
-<img src="assets/donor-bus-interior-2026-07-03.png" alt="Donor bus interior" width="640" />
+<img src="assets/donor-bus-interior-2026-07-03.png" alt="Bus interior" width="640" />
 </div>
+
+Want to help get it rolling? See what we need at
+[greatfallstoolbus.org/wants](https://greatfallstoolbus.org/wants).
 
 ## Interest form
 
@@ -24,4 +29,4 @@ Built by a community volunteer: https://forms.gle/PsyjstN4MgKhm5H8A
 
 ## Reach the project
 
-**keyholders@latoolb.us** live now.
+[greatfallstoolbus.org/contact](https://greatfallstoolbus.org/contact)
