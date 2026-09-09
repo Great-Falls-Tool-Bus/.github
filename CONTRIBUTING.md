@@ -10,12 +10,12 @@ Our source repositories are private. Access is granted by an org owner.
 
 ## Working here
 
-- Every contributor uses two-factor authentication, an SSH key, and signs
-  their commits.
+- Contributors enable two-factor authentication, upload an SSH key, and
+  sign their commits.
 - Work happens on branches, through pull requests, with review before
   merge.
-- `just` is the only entrypoint in every repository — don't call the
-  underlying tools directly.
+- Where a repository has a Justfile, `just` is the only entrypoint —
+  don't call the underlying tools directly.
 - Org members receive the private onboarding guide from an owner once
   access is granted.
 
