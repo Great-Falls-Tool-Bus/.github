@@ -20,9 +20,6 @@
 See what we need at
 [greatfallstoolbus.org/wants](https://greatfallstoolbus.org/wants).
 
-Great Falls Tool Bus is a member-run §501(c)(7) social club organized as a
-Maine nonprofit corporation. Contributions are not tax-deductible.
-
 ## Interest form
 
 Built by a community volunteer: https://forms.gle/PsyjstN4MgKhm5H8A
