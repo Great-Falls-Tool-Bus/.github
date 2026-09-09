@@ -17,9 +17,6 @@
 <img src="assets/donor-bus-interior-2026-07-03.png" alt="Bus interior" width="640" />
 </div>
 
-See what we need at
-[greatfallstoolbus.org/wants](https://greatfallstoolbus.org/wants).
-
 ## Interest form
 
 Built by a community volunteer: https://forms.gle/PsyjstN4MgKhm5H8A
