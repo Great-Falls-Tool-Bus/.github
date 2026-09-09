@@ -27,3 +27,7 @@ Built by a community volunteer: https://forms.gle/PsyjstN4MgKhm5H8A
 ## Reach the project
 
 [greatfallstoolbus.org/contact](https://greatfallstoolbus.org/contact)
+
+---
+
+Infrastructure, build systems and engineering provided by Tinyland, Inc. and RNA Services.
