@@ -1,85 +1,98 @@
 # Contributing
 
-Great Falls Tool Bus is a member-run club. To get involved, see
-[greatfallstoolbus.org/wants](https://greatfallstoolbus.org/wants) or reach
-us at [greatfallstoolbus.org/contact](https://greatfallstoolbus.org/contact).
-
-This file is the contributing contract for every repository in the
-Great Falls Tool Bus organization. The source of record is
-`steering/CONTRIBUTING.md` in the private `meta` repository; the copy in the
-organization `.github` repository is federated from it and must stay
-byte-identical. Change it in `meta` first.
-
-## Source access
-
-Our source repositories are private. Access is granted by an org owner.
-Contributors join a single team at Triage. No team and no direct collaborator
-grant holds Write, Maintain or Admin except the owner; Write is granted one
-person at a time and one repository at a time, after the account setup below
-is verified.
-
-## Account setup
-
-- Enable two-factor authentication on your GitHub account before anything
-  else.
-- Upload an SSH authentication key and, separately, a signing key (GPG is an
-  accepted alternative). Enable vigilant mode.
-- Sign every commit. An unsigned commit is not landed.
-- Org members receive the private onboarding guide from an owner once access
-  is granted.
+This is the contribution contract for every Great Falls Tool Bus repository.
+The canonical copy lives at `steering/CONTRIBUTING.md` in the private `meta`
+repository; see "How this text is federated" at the end for how the same
+bytes reach every other repository.
 
 ## Fork first
 
-Work happens on a fork of the repository, not on a branch in it.
+Work from a personal fork. Your fork is `origin`; the Great Falls Tool Bus
+repository is `upstream`. Pushes go to your fork by default.
 
-1. Fork the repository under your own account.
-2. Create a branch on your fork for each change.
-3. Open a pull request from your fork into the organization repository's
-   `main` branch.
-4. Keep the pull request small and say plainly what it does and what evidence
-   supports it. "Deployed", "verified" and "green" each need a receipt.
+    gh repo fork Great-Falls-Tool-Bus/<repo> --clone --remote
+    cd <repo>
+    git remote -v                      # origin = your fork, upstream = Great-Falls-Tool-Bus
+    git config remote.pushDefault origin
 
-Owners and Write holders follow the same fork-first flow for ordinary changes.
-A branch pushed directly to an organization repository is reserved for release
-mechanics and for landing on behalf of a contributor whose fork cannot run
-checks.
+Keep your fork's `main` level with upstream before you branch:
 
-## What holds the line
+    gh repo sync <your-login>/<repo> --source Great-Falls-Tool-Bus/<repo>
+    git fetch origin
+    git switch -c feat/short-slug origin/main
 
-The organization is on GitHub Free with private repositories. There is no
-branch protection, no ruleset, no required signature and no required workflow.
-Continuous integration checks are signals, not gates. What actually holds the
-line is the permission model (only the owner can merge), signed commits, and
-an exact-head review by someone other than the author.
+Never push directly to upstream `main`. Every change lands as a pull request
+into upstream `main`.
 
-Pull requests from forks into private repositories run no workflows today.
-The pinned spoke workflow in `ci-templates` skips a pull request whose head
-repository differs from the base repository; a patch admitting head
-repositories owned by the org owner's account is in flight. Until a fork's
-pull request runs checks, the reviewer runs the repository's keyless `just`
-recipe locally and records what they observed in the review.
+## Branches
 
-## Working here
+Branch names are semantic: a type prefix, a slash, and a short kebab-case
+slug.
 
-- Where a repository has a Justfile, `just` is the only entrypoint. Do not
-  call the underlying tools directly. If something you need has no recipe,
-  that is a gap to raise, not a reason to bypass `just`.
-- Work is tracked in Linear. Reference the issue in the pull request.
-- Review is by someone other than the author. Approve, request changes, or
-  say you are not the right reviewer; all three are useful.
+| Prefix | Use |
+|---|---|
+| `feat/` | new behaviour or content |
+| `fix/` | a defect correction |
+| `hotfix/` | an urgent correction landing ahead of the queue |
+| `docs/` | documentation only |
+| `chore/` | maintenance with no behaviour change |
+| `ci/` | workflow, runner, or check changes |
 
-## Landing
-
-Pull requests land by squash. The squash commit subject is the pull request
-title, so write the title as the commit subject you want on `main`.
-
-In `greatfallstoolbus.org`, the release workflow matches the landed commit
-subject against `^release: vX.Y.Z$`. A release pull request is titled exactly
-`release: vX.Y.Z` and nothing else; a trailing pull request number or any
-other suffix is rejected by that pattern.
+Examples: `feat/member-signup-copy`, `fix/release-subject-regex`,
+`ci/fork-pr-admission`.
 
 ## Commits
 
-Commit as yourself. Do not add AI-attribution trailers (for example
-`Co-Authored-By`) to commits or pull requests, and do not prefix pull request
-titles with a tool name.
+- Commit subjects follow Conventional Commits: `type(scope): summary`, with
+  the scope optional. Types match the branch prefixes above.
+- Every commit is signed with a key registered on your GitHub account, and
+  GitHub must show it as verified. The private onboarding guide covers key
+  setup.
+- Commit as yourself. Do not add AI attribution anywhere: no
+  `Co-Authored-By` trailers for an AI, no tool prefixes in pull request
+  titles, no generated-by lines in pull request bodies or comments.
+- Do not use em dashes in text you author. Files that already contain them
+  may keep them until the paragraph is rewritten.
+
+## Pull requests and landing
+
+- Open the pull request from your fork branch into upstream `main`.
+- The title is a conventional commit subject; it becomes the landed commit
+  subject.
+- Say what the change does and what you ran. A claim such as "verified" or
+  "green" needs a receipt in the description.
+- Landing method is squash everywhere, once the release-subject regex change
+  in `greatfallstoolbus.org` has landed. Until then `greatfallstoolbus.org`
+  lands by rebase, because its `release.yml` matches the release subject
+  pattern against the landed commit subject and a squash commit carries a
+  trailing pull request number that the current pattern rejects. Decision
+  0028 section 6 records the per-repository methods and this follow-up:
+  <https://github.com/Great-Falls-Tool-Bus/meta/blob/main/decisions/0028-contributor-access-and-repo-hygiene-2026-09-09.md#6-landing-methods-as-practised>
+
+## CI on fork pull requests
+
+The organization is on GitHub Free with no branch protection or rulesets. CI
+results are a signal for the reviewer, not a merge gate; the repository role
+model is the merge control.
+
+Until the ci-templates admission change lands, a pull request from a fork
+into a private repository runs no workflows at all. So before opening a pull
+request, run the repository's own gate locally and record the result in the
+description:
+
+    just check          # or the keyless subset the repository's README names
+
+If the repository has no `check` recipe, `just` lists what it does have.
+
+## How this text is federated
+
+The organization `.github` repository carries a byte-identical copy of this
+file at its root. GitHub serves that copy as the contributing guide for every
+repository in the organization that has no `CONTRIBUTING.md` of its own, so
+one file covers every repository.
+
+`meta` is the source. Its `just contributing-check` recipe fetches the
+organization copy through `gh api` and fails on any byte difference, so a
+change to this file that has not been mirrored is visible in `meta` CI.
+Change this file first, then mirror the exact bytes to the `.github`
+repository in a separate pull request.
