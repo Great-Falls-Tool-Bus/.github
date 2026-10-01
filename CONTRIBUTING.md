@@ -2,18 +2,18 @@
 
 This is the contribution contract for every Great Falls Tool Bus repository.
 The canonical copy lives at `steering/CONTRIBUTING.md` in the private `meta`
-repository; see "How this text is federated" at the end for how the same
-bytes reach every other repository.
+repository; see "How this text and the hooks are federated" at the end for
+how the same bytes reach every other repository.
 
 ## Fork first
 
 Work from a personal fork. Your fork is `origin`; the Great Falls Tool Bus
-repository is `upstream`. Pushes go to your fork by default.
+repository is `upstream`. Pushes go to your fork, never to upstream.
 
     gh repo fork Great-Falls-Tool-Bus/<repo> --clone --remote
     cd <repo>
     git remote -v                      # origin = your fork, upstream = Great-Falls-Tool-Bus
-    git config remote.pushDefault origin
+    just setup                         # installs the hooks, see the next section
 
 Keep your fork's `main` level with upstream before you branch:
 
@@ -21,8 +21,41 @@ Keep your fork's `main` level with upstream before you branch:
     git fetch origin
     git switch -c feat/short-slug origin/main
 
-Never push directly to upstream `main`. Every change lands as a pull request
-into upstream `main`.
+Every change lands as a pull request from a branch on your fork into upstream
+`main`. The pre-push hook refuses any push to a `Great-Falls-Tool-Bus`
+remote.
+
+## Install the hooks
+
+Every repository carries the same git hooks in `.githooks/`. Install them
+once per clone:
+
+    just setup                         # runs just hooks-install
+
+`just hooks-install` points `core.hooksPath` at `.githooks`, sets
+`remote.pushDefault` to `origin`, disables pushes to an `upstream` remote,
+and warns when `commit.gpgsign` is not set. If you already use a global
+`core.hooksPath`, the repository hooks run first and then hand over to yours.
+
+The hooks refuse three things:
+
+- a push to any `Great-Falls-Tool-Bus` remote;
+- an unsigned commit in the range you push (merge commits made by GitHub are
+  exempt);
+- AI attribution in a commit message: a `Co-Authored-By` trailer naming an
+  AI or an AI vendor address, a "Generated with" line, a robot emoji, or a
+  `[codex]` subject prefix. `Co-Authored-By` trailers for people are fine.
+
+They warn, without refusing, about a branch name without a semantic prefix,
+a subject that is not a conventional commit, and em dashes. Every message
+names the section of this file that explains the rule and the exact command
+that fixes it. On GitHub Free nothing on the server enforces these rules, so
+the hooks are advisory; the repository role model is the merge control, and a
+reviewer will send back a pull request that breaks them.
+
+`just hooks-check` compares the repository's `.githooks/` with the
+organization copy, and `just hooks-test` runs the hooks against throwaway
+fixture commits.
 
 ## Branches
 
@@ -36,63 +69,76 @@ slug.
 | `hotfix/` | an urgent correction landing ahead of the queue |
 | `docs/` | documentation only |
 | `chore/` | maintenance with no behaviour change |
-| `ci/` | workflow, runner, or check changes |
+| `ci/` | gate, runner, or check changes |
 
 Examples: `feat/member-signup-copy`, `fix/release-subject-regex`,
-`ci/fork-pr-admission`.
+`ci/hooks-self-test`.
 
 ## Commits
 
 - Commit subjects follow Conventional Commits: `type(scope): summary`, with
-  the scope optional. Types match the branch prefixes above.
+  the scope optional. Use the branch prefixes above as types; `build`,
+  `perf`, `refactor`, `revert`, `style` and `test` are also accepted.
 - Every commit is signed with a key registered on your GitHub account, and
-  GitHub must show it as verified. The private onboarding guide covers key
-  setup.
+  GitHub must show it as verified. Set `git config commit.gpgsign true`. The
+  private onboarding guide covers key setup.
 - Commit as yourself. Do not add AI attribution anywhere: no
   `Co-Authored-By` trailers for an AI, no tool prefixes in pull request
-  titles, no generated-by lines in pull request bodies or comments.
+  titles, no generated-by lines in commits, pull request bodies or comments.
 - Do not use em dashes in text you author. Files that already contain them
   may keep them until the paragraph is rewritten.
 
 ## Pull requests and landing
 
-- Open the pull request from your fork branch into upstream `main`.
+- Open the pull request from your fork branch into upstream `main`:
+
+      gh pr create --repo Great-Falls-Tool-Bus/<repo> --head <your-login>:<branch>
+
 - The title is a conventional commit subject; it becomes the landed commit
   subject.
-- Say what the change does and what you ran. A claim such as "verified" or
-  "green" needs a receipt in the description.
-- Landing method is squash everywhere, once the release-subject regex change
-  in `greatfallstoolbus.org` has landed. Until then `greatfallstoolbus.org`
-  lands by rebase, because its `release.yml` matches the release subject
-  pattern against the landed commit subject and a squash commit carries a
-  trailing pull request number that the current pattern rejects. Decision
-  0028 section 6 records the per-repository methods and this follow-up:
-  <https://github.com/Great-Falls-Tool-Bus/meta/blob/main/decisions/0028-contributor-access-and-repo-hygiene-2026-09-09.md#6-landing-methods-as-practised>
+- Say what the change does and paste the gate receipt (next section). A
+  claim such as "verified" or "green" needs a receipt in the description.
+- Pull requests land by squash in every repository. The squash commit keeps
+  the pull request title and appends the pull request number.
 
-## CI on fork pull requests
+## Run the gate and paste the receipt
 
-The organization is on GitHub Free with no branch protection or rulesets. CI
-results are a signal for the reviewer, not a merge gate; the repository role
-model is the merge control.
+No GitHub Actions workflow runs on push or pull request in any Great Falls
+Tool Bus repository. The gate is the repository's own `just` recipe, run on a
+Linux host before you ask for review:
 
-Until the ci-templates admission change lands, a pull request from a fork
-into a private repository runs no workflows at all. So before opening a pull
-request, run the repository's own gate locally and record the result in the
-description:
+    just check          # or the recipe the repository's README names as its gate
 
-    just check          # or the keyless subset the repository's README names
+If the repository has no `check` recipe, `just` lists what it does have. The
+receipt you paste into the pull request is the commit SHA you ran against,
+the host's operating system, the exact command, and the last lines of its
+output, including the pass or fail line. Some gates need keys or a lab host
+you do not hold; say so in the pull request and a maintainer will run the
+gate and post the receipt.
 
-If the repository has no `check` recipe, `just` lists what it does have.
+## Agents
 
-## How this text is federated
+Bring your own agent tooling and keep it on your fork. Upstream repositories
+carry no agent directives: no `AGENTS.md`, `CLAUDE.md`, `.agents/`,
+`.claude/`, skills, prompts, or agent notes, and a pull request that adds one
+is sent back. Keep such files untracked, for example by listing them in
+`.git/info/exclude` in your clone.
+
+The hooks hold an agent to the same rules as a person: it pushes to your fork,
+signs your commits with your key, and adds no AI attribution. You are the
+author of what your agent writes and you answer for it in review.
+
+## How this text and the hooks are federated
 
 The organization `.github` repository carries a byte-identical copy of this
-file at its root. GitHub serves that copy as the contributing guide for every
-repository in the organization that has no `CONTRIBUTING.md` of its own, so
-one file covers every repository.
+file at its root, and a byte-identical copy of the hooks in `githooks/`.
+GitHub serves this file as the contributing guide for every repository in the
+organization that has no `CONTRIBUTING.md` of its own, so one file covers
+every repository. Each repository vendors the hooks in `.githooks/`.
 
-`meta` is the source. Its `just contributing-check` recipe fetches the
-organization copy through `gh api` and fails on any byte difference, so a
-change to this file that has not been mirrored is visible in `meta` CI.
-Change this file first, then mirror the exact bytes to the `.github`
-repository in a separate pull request.
+`meta` is the source: this file is `steering/CONTRIBUTING.md` and the hooks
+are `steering/githooks/`. `just contributing-check` in `meta` fetches the
+organization copies and fails on any byte difference, and `just hooks-check`
+in every repository does the same for its `.githooks/`. Change `meta` first,
+then mirror the exact bytes to the `.github` repository, then to each
+repository's `.githooks/`.

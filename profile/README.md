@@ -21,6 +21,15 @@
 
 Built by a community volunteer: https://forms.gle/PsyjstN4MgKhm5H8A
 
+## Contributing
+
+Read [CONTRIBUTING.md](https://github.com/Great-Falls-Tool-Bus/.github/blob/main/CONTRIBUTING.md).
+Work from a fork and install the shared hooks:
+
+    gh repo fork Great-Falls-Tool-Bus/<repo> --clone --remote
+    cd <repo>
+    just setup
+
 ## Reach the project
 
 [greatfallstoolbus.org/contact](https://greatfallstoolbus.org/contact)
