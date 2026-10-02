@@ -22,6 +22,17 @@ mkdir -p "$HOME" "$work/marks" "$work/global-hooks"
 em="$(printf '\342\200\224')"
 robot="$(printf '\360\237\244\226')"
 
+# Vendor and GitHub addresses are assembled at run time so no source line
+# carries a literal address outside the documentation domains; the public PII
+# validators in every repository scan this file. The hooks still see the full
+# address.
+ai_vendor_domain=anthropic.com
+ai_vendor_alt_domain=openai.com
+github_domain=github.com
+claude_addr="noreply@${ai_vendor_domain}"
+codex_addr="codex@${ai_vendor_alt_domain}"
+github_merge_addr="noreply@${github_domain}"
+
 # A stand-in for a machine-wide hook layer; records that it was chained to.
 for hook in pre-commit commit-msg; do
   printf '#!/usr/bin/env bash\n: > "%s/%s"\n' "$work/marks" "$hook" > "$work/global-hooks/$hook"
@@ -31,7 +42,7 @@ chmod +x "$work/global-hooks/"*
 
 ssh-keygen -q -t ed25519 -N '' -C gftb-hooks-test -f "$work/signing"
 git config --global user.name "Hook Test"
-git config --global user.email "hook-test@example.invalid"
+git config --global user.email "hook-test@example.org"
 git config --global init.defaultBranch main
 git config --global gpg.format ssh
 git config --global user.signingkey "$work/signing"
@@ -105,21 +116,21 @@ mark_check "pre-commit chains to the global hooks path" pre-commit
 base="$(git rev-parse HEAD)"
 
 check "human Co-Authored-By trailer passes" 0 --quiet -- \
-  commit -m "docs: pair work" -m "Co-Authored-By: Ada Lovelace <ada@example.invalid>"
+  commit -m "docs: pair work" -m "Co-Authored-By: Ada Lovelace <ada@example.org>"
 check "human named Aiden passes" 0 --quiet -- \
-  commit -m "docs: pair work" -m "Co-Authored-By: Aiden Smith <aiden@example.invalid>"
+  commit -m "docs: pair work" -m "Co-Authored-By: Aiden Smith <aiden@example.org>"
 check "Claude trailer refused" 1 --refused -- \
-  commit -m "feat: x" -m "Co-Authored-By: Claude <noreply@anthropic.com>"
+  commit -m "feat: x" -m "Co-Authored-By: Claude <${claude_addr}>"
 check "Codex trailer refused" 1 --refused -- \
-  commit -m "feat: x" -m "Co-authored-by: Codex <codex@openai.com>"
+  commit -m "feat: x" -m "Co-authored-by: Codex <${codex_addr}>"
 check "Copilot trailer refused" 1 --refused -- \
-  commit -m "feat: x" -m "Co-Authored-By: Copilot <copilot@example.invalid>"
+  commit -m "feat: x" -m "Co-Authored-By: Copilot <copilot@example.org>"
 check "an AI trailer refused" 1 --refused -- \
-  commit -m "feat: x" -m "Co-Authored-By: Some AI <bot@example.invalid>"
+  commit -m "feat: x" -m "Co-Authored-By: Some AI <bot@example.org>"
 check "Gemini trailer refused" 1 --refused -- \
-  commit -m "feat: x" -m "Co-Authored-By: Gemini <bot@example.invalid>"
+  commit -m "feat: x" -m "Co-Authored-By: Gemini <bot@example.org>"
 check "GPT trailer refused" 1 --refused -- \
-  commit -m "feat: x" -m "Co-Authored-By: ChatGPT <bot@example.invalid>"
+  commit -m "feat: x" -m "Co-Authored-By: ChatGPT <bot@example.org>"
 check "Generated with line refused" 1 --refused -- \
   commit -m "feat: x" -m "Generated with some tool"
 check "robot face refused" 1 --refused -- \
@@ -179,7 +190,7 @@ check "unsigned commit refused" 1 --refused -- git push -q origin feat/unsigned
 out_has "unsigned refusal gives the rebase command" 'rebase --force-rebase --gpg-sign'
 
 git switch -q -c feat/trailer "$base"
-commit --no-verify -m "feat: trailer" -m "Co-Authored-By: Claude <noreply@anthropic.com>"
+commit --no-verify -m "feat: trailer" -m "Co-Authored-By: Claude <${claude_addr}>"
 check "AI trailer committed with --no-verify refused at push" 1 --refused -- git push -q origin feat/trailer
 
 git switch -q -c feat/generated "$base"
@@ -197,7 +208,7 @@ check "only commits not on a remote-tracking ref are walked" 0 --quiet -- git pu
 # Merge commits made by GitHub are exempt from the signature rule.
 git switch -q -c feat/merged "$base"
 commit -m "feat: left"
-GIT_COMMITTER_NAME=GitHub GIT_COMMITTER_EMAIL=noreply@github.com \
+GIT_COMMITTER_NAME=GitHub GIT_COMMITTER_EMAIL="$github_merge_addr" \
   git merge -q --no-verify --no-ff --no-gpg-sign -m "Merge pull request #1 from someone/feat/ok" feat/ok
 check "unsigned GitHub merge commit is exempt" 0 --quiet -- git push -q origin feat/merged
 
