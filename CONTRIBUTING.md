@@ -5,6 +5,22 @@ The canonical copy lives at `steering/CONTRIBUTING.md` in the private `meta`
 repository; see "How this text and the hooks are federated" at the end for
 how the same bytes reach every other repository.
 
+## Before you start
+
+You need four things on your machine before the first clone:
+
+- `git`, version 2.34 or later (SSH commit signing needs it).
+- [Nix](https://nixos.org/download/) with flakes enabled
+  (`experimental-features = nix-command flakes` in `~/.config/nix/nix.conf`).
+  Every repository's devshell provides `just` and the rest of its tools, so
+  you do not install them yourself.
+- The GitHub CLI `gh`, signed in once with `gh auth login`.
+- A signing key registered on your GitHub account and configured in git
+  (section "Set up commit signing" below).
+
+Most repositories are private. To fork one you must first accept an
+invitation to the organization; ask the owner for one.
+
 ## Fork first
 
 Work from a personal fork. Your fork is `origin`; the Great Falls Tool Bus
@@ -13,7 +29,11 @@ repository is `upstream`. Pushes go to your fork, never to upstream.
     gh repo fork Great-Falls-Tool-Bus/<repo> --clone --remote
     cd <repo>
     git remote -v                      # origin = your fork, upstream = Great-Falls-Tool-Bus
+    nix develop                        # enter the devshell; it provides just
     just setup                         # installs the hooks, see the next section
+
+Run `just` from inside the devshell. Where the repository tracks an `.envrc`,
+`direnv allow` enters the devshell for you.
 
 Keep your fork's `main` level with upstream before you branch:
 
@@ -80,13 +100,43 @@ Examples: `feat/member-signup-copy`, `fix/release-subject-regex`,
   the scope optional. Use the branch prefixes above as types; `build`,
   `perf`, `refactor`, `revert`, `style` and `test` are also accepted.
 - Every commit is signed with a key registered on your GitHub account, and
-  GitHub must show it as verified. Set `git config commit.gpgsign true`. The
-  private onboarding guide covers key setup.
+  GitHub must show it as verified. Section "Set up commit signing" below
+  covers the key setup.
 - Commit as yourself. Do not add AI attribution anywhere: no
   `Co-Authored-By` trailers for an AI, no tool prefixes in pull request
   titles, no generated-by lines in commits, pull request bodies or comments.
 - Do not use em dashes in text you author. Files that already contain them
   may keep them until the paragraph is rewritten.
+
+## Set up commit signing
+
+On GitHub an SSH key is uploaded twice, even when it is the same file: once
+as an *Authentication key* (for cloning over SSH) and once as a *Signing key*
+(for verified commits). Generate a key if you do not have one, then upload
+`~/.ssh/id_ed25519.pub` under Settings, SSH and GPG keys, both ways:
+
+    ssh-keygen -t ed25519 -C "your-github-login"
+
+Configure git to sign every commit, and give it an allowed-signers file so it
+can verify your own signatures locally:
+
+    git config --global gpg.format ssh
+    git config --global user.signingkey ~/.ssh/id_ed25519.pub
+    git config --global commit.gpgsign true
+    mkdir -p ~/.config/git
+    echo "$(git config user.email) $(cat ~/.ssh/id_ed25519.pub)" >> ~/.config/git/allowed_signers
+    git config --global gpg.ssh.allowedSignersFile ~/.config/git/allowed_signers
+
+Check it in a throwaway repository, so no test commit lands in a real clone:
+
+    cd "$(mktemp -d)" && git init -q && git commit -q --allow-empty -m "chore: signing check"
+    git log -1 --format='%G?'          # must print G
+
+`N` means the commit is unsigned or git cannot verify it; recheck the
+allowed-signers line. GPG is an accepted alternative: upload the public key
+under GPG keys and set `gpg.format` to `openpgp`. Turning on vigilant mode
+("Flag unsigned commits as unverified" on the same settings page) makes an
+unsigned commit in your name visibly unverified.
 
 ## Pull requests and landing
 
@@ -103,9 +153,9 @@ Examples: `feat/member-signup-copy`, `fix/release-subject-regex`,
 
 ## Run the gate and paste the receipt
 
-No GitHub Actions workflow runs on push or pull request in any Great Falls
-Tool Bus repository. The gate is the repository's own `just` recipe, run on a
-Linux host before you ask for review:
+No GitHub Actions workflow gates a pull request in any Great Falls Tool Bus
+repository. The gate is the repository's own `just` recipe, run on a Linux
+host before you ask for review:
 
     just check          # or the recipe the repository's README names as its gate
 
@@ -115,6 +165,14 @@ the host's operating system, the exact command, and the last lines of its
 output, including the pass or fail line. Some gates need keys or a lab host
 you do not hold; say so in the pull request and a maintainer will run the
 gate and post the receipt.
+
+`greatfallstoolbus.org` is the one repository where workflows still run on a
+pull request, and none of them is a required check. Its `changelog-gate`
+fails when `## [Unreleased]` in `CHANGELOG.md` is empty outside a release
+pull request (that repository's `RELEASING.md` explains releases), and two
+path-scoped checks run only when you change their own files. On a fork pull
+request these runs can wait for a maintainer to approve them; a waiting run
+is not a failure of your change.
 
 ## Agents
 
