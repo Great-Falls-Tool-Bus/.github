@@ -169,10 +169,11 @@ gate and post the receipt.
 `greatfallstoolbus.org` is the one repository where workflows still run on a
 pull request, and none of them is a required check. Its `changelog-gate`
 fails when `## [Unreleased]` in `CHANGELOG.md` is empty outside a release
-pull request (that repository's `RELEASING.md` explains releases), and two
-path-scoped checks run only when you change their own files. On a fork pull
-request these runs can wait for a maintainer to approve them; a waiting run
-is not a failure of your change.
+pull request (that repository's `RELEASING.md` explains releases). It starts
+on a fork pull request without waiting for a maintainer, and it only reads
+files: it runs nothing from your branch and uses no secrets. Two path-scoped
+checks run only for branches in the repository itself, so they skip a fork
+pull request.
 
 ## Agents
 
