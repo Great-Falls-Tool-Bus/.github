@@ -47,8 +47,7 @@ remote.
 
 ## Install the hooks
 
-Every repository carries the same git hooks in `.githooks/`. Install them
-once per clone:
+In a repository with `.githooks/`, install the shared hooks once per clone.
 
     just setup                         # runs just hooks-install
 
@@ -56,6 +55,20 @@ once per clone:
 `remote.pushDefault` to `origin`, disables pushes to an `upstream` remote,
 and warns when `commit.gpgsign` is not set. If you already use a global
 `core.hooksPath`, the repository hooks run first and then hand over to yours.
+
+For a clone without the setup recipe or vendored hooks, use the hooks from a
+local checkout of the organization’s `.github` repository. Set the path in the
+contributor clone. Preserve any existing repository hook setup.
+
+    git config --local core.hooksPath /absolute/path/to/.github/githooks
+
+Huskycat formats staged comments before signing and adds its receipt to the
+commit message. On a Lab machine the global hooks run Huskycat. Elsewhere,
+put the pilot's Huskycat executable on `PATH` and check `huskycat --version`.
+If your own global hooks handle commits without running Huskycat, select the
+repository as the formatter owner. The shared hooks still call your hooks.
+
+    git config --local gftb.huskycatOwner repo
 
 The hooks refuse three things:
 
