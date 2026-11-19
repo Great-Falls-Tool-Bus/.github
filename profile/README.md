@@ -28,7 +28,7 @@ Read the [contributor guide](https://github.com/Great-Falls-Tool-Bus/.github/blo
     gh repo fork Great-Falls-Tool-Bus/<repo> --clone --remote
     cd <repo>
 
-Follow the setup steps in that repository’s README. For the platform, infra, site and meta, run `nix develop` and then `just setup` to install the shared hooks.
+Follow the repository’s README. If its Justfile provides `hooks-install`, enter its Nix shell with `nix develop`, then run `just setup` to install the shared hooks.
 
 ## Reach the project
 
