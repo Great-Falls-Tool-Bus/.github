@@ -1,6 +1,6 @@
 # Contributing
 
-These rules apply across Great Falls Tool Bus. Each repository’s README names its development commands and gate.
+These rules apply across Great Falls Tool Bus. Consult the repository’s contributor guide and, where available, its Justfile for development commands and the gate.
 
 ## Before you start
 
