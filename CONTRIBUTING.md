@@ -1,139 +1,64 @@
 # Contributing
 
-This is the contribution contract for every Great Falls Tool Bus repository.
-The canonical copy lives at `steering/CONTRIBUTING.md` in the private `meta`
-repository; see "How this text and the hooks are federated" at the end for
-how the same bytes reach every other repository.
+These rules apply across Great Falls Tool Bus. Each repository’s README names its development commands and gate.
 
 ## Before you start
 
-You need four things on your machine before the first clone:
+Use Git 2.34 or later for SSH signing. Sign in to the GitHub CLI with `gh auth login` and register a signing key. Accept the organization invitation before forking a private repository.
 
-- `git`, version 2.34 or later (SSH commit signing needs it).
-- [Nix](https://nixos.org/download/) with flakes enabled
-  (`experimental-features = nix-command flakes` in `~/.config/nix/nix.conf`).
-  Every repository's devshell provides `just` and the rest of its tools, so
-  you do not install them yourself.
-- The GitHub CLI `gh`, signed in once with `gh auth login`.
-- A signing key registered on your GitHub account and configured in git
-  (section "Set up commit signing" below).
-
-Most repositories are private. To fork one you must first accept an
-invitation to the organization; ask the owner for one.
+For repositories with a flake, enable `experimental-features = nix-command flakes` in `~/.config/nix/nix.conf`. [Install Nix](https://nixos.org/download/).
 
 ## Fork first
 
-Work from a personal fork. Your fork is `origin`; the Great Falls Tool Bus
-repository is `upstream`. Pushes go to your fork, never to upstream.
+Clone your personal fork. Check that `origin` points to the fork and `upstream` to the organization.
 
     gh repo fork Great-Falls-Tool-Bus/<repo> --clone --remote
     cd <repo>
-    git remote -v                      # origin = your fork, upstream = Great-Falls-Tool-Bus
-    nix develop                        # enter the devshell; it provides just
-    just setup                         # installs the hooks, see the next section
+    git remote -v
 
-Run `just` from inside the devshell. Where the repository tracks an `.envrc`,
-`direnv allow` enters the devshell for you.
+If the repository has a flake, run `nix develop`. Where it tracks an `.envrc`, `direnv allow` enters the shell. Use its Just recipes inside that shell.
 
-Keep your fork's `main` level with upstream before you branch:
+Sync your fork and branch from its current main:
 
     gh repo sync <your-login>/<repo> --source Great-Falls-Tool-Bus/<repo>
     git fetch origin
     git switch -c feat/short-slug origin/main
 
-Every change lands as a pull request from a branch on your fork into upstream
-`main`. The pre-push hook refuses any push to a `Great-Falls-Tool-Bus`
-remote.
-
 ## Install the hooks
 
-In a repository with `.githooks/`, install the shared hooks once per clone.
+Where the repository supplies `.githooks/` and `just hooks-install`, run `just setup` once. It sets `core.hooksPath` to `.githooks`, makes `origin` the default push remote and disables pushes to a configured `upstream`. It warns if commit signing is off.
 
-    just setup                         # runs just hooks-install
-
-`just hooks-install` points `core.hooksPath` at `.githooks`, sets
-`remote.pushDefault` to `origin`, disables pushes to an `upstream` remote,
-and warns when `commit.gpgsign` is not set. If you already use a global
-`core.hooksPath`, the repository hooks run first and then hand over to yours.
-
-For a clone without the setup recipe or vendored hooks, use the hooks from a
-local checkout of the organization’s `.github` repository. Set the path in the
-contributor clone. Preserve any existing repository hook setup.
+If the repository has no shared-hook setup, use a local checkout of the public organization `.github` repository. Preserve existing repository hooks. In a clone without a repository hook path, run:
 
     git config --local core.hooksPath /absolute/path/to/.github/githooks
 
-Huskycat formats staged comments before signing and adds its receipt to the
-commit message. On a Lab machine the global hooks run Huskycat. Elsewhere,
-put the pilot's Huskycat package on `PATH` and check `huskycat --version`.
-The installed Lab release skips partially staged files. The pilot candidate
-formats their staged snapshot and preserves the working copy.
-If your own global hooks handle commits without running Huskycat, select the
-repository as the formatter owner. The shared hooks still call your hooks.
+The shared hooks chain to a different global `core.hooksPath`. Lab’s global hooks run Huskycat. In other contributor environments, put the pilot package on `PATH` and check `huskycat --version`. If a custom global hook handles commits without calling Huskycat, keep that hook and select the repository as formatter:
 
     git config --local gftb.huskycatOwner repo
 
-The hooks refuse three things:
+Huskycat formats staged comments before signing and adds its commit-message receipt. The installed Lab release skips partially staged files. A partially staged comment that still needs formatting can leave a signed commit without a receipt. The pilot candidate formats the staged snapshot and preserves unstaged work.
 
-- a push to any `Great-Falls-Tool-Bus` remote;
-- an unsigned commit in the range you push (merge commits made by GitHub are
-  exempt);
-- AI attribution in a commit message: a `Co-Authored-By` trailer naming an
-  AI or an AI vendor address, a "Generated with" line, a robot emoji, or a
-  `[codex]` subject prefix. `Co-Authored-By` trailers for people are fine.
+The hooks refuse pushes to organization remotes, unsigned commits in the pushed range and AI attribution. GitHub merge commits have a signature exemption. The hooks warn about branch names, commit subjects and em dashes. On private GitHub Free repositories these local checks are advisory. Repository permissions control who can merge.
 
-They warn, without refusing, about a branch name without a semantic prefix,
-a subject that is not a conventional commit, and em dashes. Every message
-names the section of this file that explains the rule and the exact command
-that fixes it. On GitHub Free nothing on the server enforces these rules, so
-the hooks are advisory; the repository role model is the merge control, and a
-reviewer will send back a pull request that breaks them.
-
-`just hooks-check` compares the repository's `.githooks/` with the
-organization copy, and `just hooks-test` runs the hooks against throwaway
-fixture commits.
+Where supplied, `just hooks-check` compares the installed hooks with the public mirror. `just hooks-test` runs the fixtures.
 
 ## Branches
 
-Branch names are semantic: a type prefix, a slash, and a short kebab-case
-slug.
-
-| Prefix | Use |
-|---|---|
-| `feat/` | new behaviour or content |
-| `fix/` | a defect correction |
-| `hotfix/` | an urgent correction landing ahead of the queue |
-| `docs/` | documentation only |
-| `chore/` | maintenance with no behaviour change |
-| `ci/` | gate, runner, or check changes |
-
-Examples: `feat/member-signup-copy`, `fix/release-subject-regex`,
-`ci/hooks-self-test`.
+Use a short kebab-case slug after `feat/`, `fix/`, `hotfix/`, `docs/`, `chore/` or `ci/`. For example, `feat/member-signup-copy`.
 
 ## Commits
 
-- Commit subjects follow Conventional Commits: `type(scope): summary`, with
-  the scope optional. Use the branch prefixes above as types; `build`,
-  `perf`, `refactor`, `revert`, `style` and `test` are also accepted.
-- Every commit is signed with a key registered on your GitHub account, and
-  GitHub must show it as verified. Section "Set up commit signing" below
-  covers the key setup.
-- Commit as yourself. Do not add AI attribution anywhere: no
-  `Co-Authored-By` trailers for an AI, no tool prefixes in pull request
-  titles, no generated-by lines in commits, pull request bodies or comments.
-- Do not use em dashes in text you author. Files that already contain them
-  may keep them until the paragraph is rewritten.
+Use a Conventional Commits subject, `type(scope): summary`. The scope is optional. The branch prefixes also work as commit types. Additional types are `build`, `perf`, `refactor`, `revert`, `style` and `test`.
+
+Sign every commit as yourself with a key registered on GitHub. Verify that GitHub shows it as verified. Human `Co-Authored-By` trailers are allowed. Omit AI or vendor attribution, “Generated with” lines, robot emoji and `[codex]` prefixes from commits, PR titles, descriptions and comments. Avoid em dashes in new text. Existing ones can stay until the paragraph is rewritten.
 
 ## Set up commit signing
 
-On GitHub an SSH key is uploaded twice, even when it is the same file: once
-as an *Authentication key* (for cloning over SSH) and once as a *Signing key*
-(for verified commits). Generate a key if you do not have one, then upload
-`~/.ssh/id_ed25519.pub` under Settings, SSH and GPG keys, both ways:
+For SSH, generate a key if needed. Register its public key under GitHub Settings, SSH and GPG keys. Select *Signing key* for commits. For SSH cloning, register it separately as an *Authentication key*, even if you use the same file.
 
     ssh-keygen -t ed25519 -C "your-github-login"
 
-Configure git to sign every commit, and give it an allowed-signers file so it
-can verify your own signatures locally:
+Configure signing and local verification with your public key:
 
     git config --global gpg.format ssh
     git config --global user.signingkey ~/.ssh/id_ed25519.pub
@@ -142,77 +67,34 @@ can verify your own signatures locally:
     echo "$(git config user.email) $(cat ~/.ssh/id_ed25519.pub)" >> ~/.config/git/allowed_signers
     git config --global gpg.ssh.allowedSignersFile ~/.config/git/allowed_signers
 
-Check it in a throwaway repository, so no test commit lands in a real clone:
+For GPG, register your public GPG key on GitHub, set `gpg.format` to `openpgp`, set `user.signingkey` to its fingerprint and enable `commit.gpgsign`. GitHub’s vigilant mode flags unsigned commits in your name.
+
+Test signing in a disposable repository:
 
     cd "$(mktemp -d)" && git init -q && git commit -q --allow-empty -m "chore: signing check"
-    git log -1 --format='%G?'          # must print G
+    git log -1 --format='%G?'
 
-`N` means the commit is unsigned or git cannot verify it; recheck the
-allowed-signers line. GPG is an accepted alternative: upload the public key
-under GPG keys and set `gpg.format` to `openpgp`. Turning on vigilant mode
-("Flag unsigned commits as unverified" on the same settings page) makes an
-unsigned commit in your name visibly unverified.
+Expect `G`. For an unsigned or unverified commit, check your signing configuration and, for SSH, your allowed-signers file.
 
 ## Pull requests and landing
 
-- Open the pull request from your fork branch into upstream `main`:
+Push your branch to your fork and open a PR into upstream `main`:
 
-      gh pr create --repo Great-Falls-Tool-Bus/<repo> --head <your-login>:<branch>
+    git push -u origin <branch>
+    gh pr create --repo Great-Falls-Tool-Bus/<repo> --head <your-login>:<branch>
 
-- The title is a conventional commit subject; it becomes the landed commit
-  subject.
-- Say what the change does and paste the gate receipt (next section). A
-  claim such as "verified" or "green" needs a receipt in the description.
-- Pull requests land by squash in every repository. The squash commit keeps
-  the pull request title and appends the pull request number.
+Describe the change and provide its gate receipt. Use a conventional subject for the title. Every repository lands PRs by squash, retaining the title and appending the PR number.
 
 ## Run the gate and paste the receipt
 
-No GitHub Actions workflow gates a pull request in any Great Falls Tool Bus
-repository. The gate is the repository's own `just` recipe, run on a Linux
-host before you ask for review:
+Run the gate named by the repository on a Linux host before requesting review. Run `just` to list the available recipes. Repositories use different gates, including `just check` and `just gate-deploy`. The platform’s release and changelog instructions belong to that repository.
 
-    just check          # or the recipe the repository's README names as its gate
-
-If the repository has no `check` recipe, `just` lists what it does have. The
-receipt you paste into the pull request is the commit SHA you ran against,
-the host's operating system, the exact command, and the last lines of its
-output, including the pass or fail line. Some gates need keys or a lab host
-you do not hold; say so in the pull request and a maintainer will run the
-gate and post the receipt.
-
-`greatfallstoolbus.org` is the one repository where workflows still run on a
-pull request, and none of them is a required check. Its `changelog-gate`
-fails when `## [Unreleased]` in `CHANGELOG.md` is empty outside a release
-pull request (that repository's `RELEASING.md` explains releases). It starts
-on a fork pull request without waiting for a maintainer, and it only reads
-files: it runs nothing from your branch and uses no secrets. Two path-scoped
-checks run only for branches in the repository itself, so they skip a fork
-pull request.
+Paste the tested commit SHA, host operating system, exact command and final output showing pass or fail. If you lack the required host or access, say so in the PR. A maintainer runs the gate and posts the receipt.
 
 ## Agents
 
-Bring your own agent tooling and keep it on your fork. Upstream repositories
-carry no agent directives: no `AGENTS.md`, `CLAUDE.md`, `.agents/`,
-`.claude/`, skills, prompts, or agent notes, and a pull request that adds one
-is sent back. Keep such files untracked, for example by listing them in
-`.git/info/exclude` in your clone.
-
-The hooks hold an agent to the same rules as a person: it pushes to your fork,
-signs your commits with your key, and adds no AI attribution. You are the
-author of what your agent writes and you answer for it in review.
+Keep agent directives, skills, prompts and notes on your fork and out of upstream PRs. That includes `AGENTS.md`, `CLAUDE.md`, `.agents/` and `.claude/`. Use `.git/info/exclude` for untracked files in your clone. You sign and answer for changes you submit.
 
 ## How this text and the hooks are federated
 
-The organization `.github` repository carries a byte-identical copy of this
-file at its root, and a byte-identical copy of the hooks in `githooks/`.
-GitHub serves this file as the contributing guide for every repository in the
-organization that has no `CONTRIBUTING.md` of its own, so one file covers
-every repository. Each repository vendors the hooks in `.githooks/`.
-
-`meta` is the source: this file is `steering/CONTRIBUTING.md` and the hooks
-are `steering/githooks/`. `just contributing-check` in `meta` fetches the
-organization copies and fails on any byte difference, and `just hooks-check`
-in every repository does the same for its `.githooks/`. Change `meta` first,
-then mirror the exact bytes to the `.github` repository, then to each
-repository's `.githooks/`.
+Maintainers change `steering/CONTRIBUTING.md` and `steering/githooks/` in private meta first. Copy the exact bytes into the public `.github` repository as `CONTRIBUTING.md` and `githooks/`, then into each consumer’s `.githooks/`. GitHub displays the public guide for repositories without their own contributing guide. In meta, `just contributing-check` compares the canonical files with the public mirror.
