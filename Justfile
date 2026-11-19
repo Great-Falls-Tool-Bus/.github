@@ -15,12 +15,15 @@ hooks-install:
         echo 'Configure commit signing before pushing. See CONTRIBUTING.md.' >&2
     fi
 
-# Compare to the published mirror. For a mirror update, pass the reviewed meta checkout’s .githooks directory.
+# Compare with the public mirror or a reviewed copy of the executable hooks from meta/.githooks.
 [positional-arguments]
 hooks-check source='':
     #!/usr/bin/env bash
     set -euo pipefail
-    [[ "$(readlink .githooks)" == githooks ]]
+    if [[ "$(readlink .githooks)" != githooks ]]; then
+        echo 'hooks-check: .githooks must point to githooks' >&2
+        exit 1
+    fi
     source="$1"
     if [[ -z "$source" ]]; then
         tmp=$(mktemp -d)
