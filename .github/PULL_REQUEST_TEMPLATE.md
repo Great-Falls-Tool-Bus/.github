@@ -1,5 +1,7 @@
 ## What changed
 
+<!-- Ask the Triage QA reviewer directly when their review is needed. -->
+
 ## Gate receipt
 
 <!-- Include the commit SHA, Linux host OS, exact gate command and final pass or fail output.
