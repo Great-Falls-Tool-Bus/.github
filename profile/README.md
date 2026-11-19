@@ -23,12 +23,12 @@ Built by a community volunteer: https://forms.gle/PsyjstN4MgKhm5H8A
 
 ## Contributing
 
-Read [CONTRIBUTING.md](https://github.com/Great-Falls-Tool-Bus/.github/blob/main/CONTRIBUTING.md).
-Work from a fork and install the shared hooks:
+Read the [contributor guide](https://github.com/Great-Falls-Tool-Bus/.github/blob/main/CONTRIBUTING.md) and clone your fork:
 
     gh repo fork Great-Falls-Tool-Bus/<repo> --clone --remote
     cd <repo>
-    just setup
+
+Follow the setup steps in that repository’s README. For the platform, infra, site and meta, run `nix develop` and then `just setup` to install the shared hooks.
 
 ## Reach the project
 
