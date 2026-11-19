@@ -64,7 +64,9 @@ contributor clone. Preserve any existing repository hook setup.
 
 Huskycat formats staged comments before signing and adds its receipt to the
 commit message. On a Lab machine the global hooks run Huskycat. Elsewhere,
-put the pilot's Huskycat executable on `PATH` and check `huskycat --version`.
+put the pilot's Huskycat package on `PATH` and check `huskycat --version`.
+The installed Lab release skips partially staged files. The pilot candidate
+formats their staged snapshot and preserves the working copy.
 If your own global hooks handle commits without running Huskycat, select the
 repository as the formatter owner. The shared hooks still call your hooks.
 
