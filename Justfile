@@ -15,7 +15,7 @@ hooks-install:
         echo 'Configure commit signing before pushing. See CONTRIBUTING.md.' >&2
     fi
 
-# Compare with the public mirror or a reviewed copy of the executable hooks from meta/.githooks.
+# Compare with the public mirror or a reviewed copy of the executable hooks from meta/steering/githooks.
 [positional-arguments]
 hooks-check source='':
     #!/usr/bin/env bash
