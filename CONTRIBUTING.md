@@ -92,13 +92,11 @@ Push your branch to your fork and open a PR into upstream `main`:
     git push -u origin <branch>
     gh pr create --repo Great-Falls-Tool-Bus/<repo> --head <your-login>:<branch>
 
-Describe the change and provide its gate receipt. Use a conventional subject for the title. Every repository lands PRs by squash, retaining the title and appending the PR number.
+Describe the change. Use a conventional subject for the title. Every repository lands PRs by squash, retaining the title and appending the PR number.
 
-## Run the gate and paste the receipt
+## Run the checks
 
-Run the gate named by the repository on a Linux host before requesting review. Run `just` to list the available recipes. Repositories use different gates, including `just check` and `just gate-deploy`. The platform’s release and changelog instructions belong to that repository.
-
-Paste the tested commit SHA, host operating system, exact command and final output showing pass or fail. If you lack the required host or access, say so in the PR. A maintainer runs the gate and posts the receipt.
+Run the repository's checks on a Linux host before requesting review. Run `just` to list the recipes. Repositories use different gates, including `just check` and `just gate-deploy`. The platform’s release and changelog instructions belong to that repository. If you lack the required host or access, say so in the PR and a maintainer runs them.
 
 ## Agents
 
