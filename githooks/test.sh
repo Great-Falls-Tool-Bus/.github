@@ -427,6 +427,8 @@ for entry in 'allow greatfallstoolbus.org:scripts/x.sh' \
   'allow scripts/x.sh TIN-3847 no repository' \
   'allow greatfallstoolbus.org:scripts/*.sh TIN-3847 a pattern' \
   'allow greatfallstoolbus.org:scripts/x.sh tin3847 bad ticket' \
+  'allow greatfallstoolbus.org:scripts/../AGENTS.md TIN-3847 a parent segment' \
+  'allow greatfallstoolbus.org:../AGENTS.md TIN-3847 a parent segment' \
   'permit AGENTS.md' \
   'keep .githooks/'; do
   cp "$list" "$alt"
