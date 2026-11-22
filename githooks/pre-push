@@ -61,7 +61,8 @@ gftb_tooling_paths_warn() {
     if [ -z "$base" ]; then
       base="$(git hash-object -t tree /dev/null)"
     fi
-    git diff --name-only --no-renames --diff-filter=AM "$base" "$local_sha" -- >> "$paths"
+    # NUL-separated names are never quoted, so non-ASCII paths arrive intact.
+    git diff -z --name-only --no-renames --diff-filter=AMT "$base" "$local_sha" -- | tr '\000' '\n' >> "$paths"
   done < "$input"
   if ! sort -u "$paths" | gftb_tooling_hits "$list" "$repo" > "$hits"; then
     gftb_warn "could not read $list; the pushed paths were not checked" \

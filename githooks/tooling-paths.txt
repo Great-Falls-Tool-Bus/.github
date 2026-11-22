@@ -5,55 +5,61 @@
 # request into one. The rule is CONTRIBUTING.md, section "Agents":
 # https://github.com/Great-Falls-Tool-Bus/.github/blob/main/CONTRIBUTING.md
 #
+# The rule covers directives, skills, prompts, plugins and notes, and scripts
+# and receipts that exist to drive agent sessions. The entries below are the
+# enforced set.
+#
 # Canonical copy: meta steering/githooks/. Mirror: the organization .github
 # repository, githooks/. Repositories vendor it in .githooks/ with the hooks.
 # The pre-push hook reads it for pushes to an organization remote. In meta,
-# `just upstream-tooling-audit` reads it for every default branch or for one
-# pull request.
+# `just upstream-tooling-audit` reads the copy on meta's default branch.
 #
 # Syntax, one entry per line:
 #   deny PATTERN                       a path that must not be upstream
 #   deny REPO:PATTERN                  the same, for one repository only
-#   keep PATTERN                       never flagged, whatever matches it
-#   allow REPO:PATH TICKET REASON      one tracked file admitted on purpose
+#   allow REPO:PATH TICKET REASON      one exact path admitted on purpose
 #
-# A PATTERN is anchored at the repository root. `*` and `?` stay inside one
-# path segment. A leading `**/` lets the rest start at any depth. A trailing
-# `/` covers everything below that directory. Matching is by path, never by a
-# word inside a path or a file. Every allow entry names a ticket and a reason.
+# A PATTERN is anchored at the repository root and matched without regard to
+# case. `*` and `?` stay inside one path segment. A leading `**/` lets the rest
+# start at any depth. A trailing `/` matches the bare name, file or symbolic
+# link, and everything below it. Matching is by path, never by a word inside a
+# path or a file. Hooks, Huskycat, CI and product files are never listed: no
+# pattern matches their ordinary files. An allow entry is the only exception,
+# and it names one exact path, a ticket and a reason.
 
-# Scope boundary: commit hooks, Huskycat, CI and the product stay out of scope.
-keep .githooks/
-keep githooks/
-keep .github/workflows/
-keep .github/lanes.json
-keep .huskycat/
-
-# Contract and skills files.
+# Directives, skills, prompts, plugins and notes.
 deny **/AGENTS.md
+deny **/AGENT.md
 deny **/CLAUDE.md
 deny **/CLAUDE.local.md
 deny **/GEMINI.md
+deny **/SKILL.md
 deny **/.agents/
 deny **/.claude/
 deny **/.claude-plugin/
+deny **/.claudeignore
 deny **/.codex/
 deny **/.cursor/
-deny **/.cursorrules
+deny **/.cursorrules/
 deny **/.gemini/
 deny **/.windsurf/
-deny **/.windsurfrules
-deny **/.aider*
+deny **/.windsurfrules/
 deny **/.aider*/
+deny **/.clinerules/
+deny **/.roo/
+deny **/.kiro/
+deny **/.continue/
+deny **/.opencode/
+deny **/opencode.json
+deny **/.junie/
 deny **/.mcp.json
-deny **/SKILL.md
-deny plugins/
-deny skills/
-deny scripts/build-agent-skills.*
-deny scripts/validate-skills.*
-deny docs/agent-notes/
+deny **/.vscode/mcp.json
+deny **/docs/agent-notes/
 deny docs/agent-adoption.md
 deny static/agent-map.md
+deny scripts/build-agent-skills.*
+deny scripts/validate-skills.*
+deny .github/agents/
 deny .github/copilot-instructions.md
 deny .github/instructions/
 deny .github/prompts/
@@ -61,7 +67,7 @@ deny .github/chatmodes/
 # The former root AGENTS.md of infra, renamed on October 2, 2026.
 deny great-falls-tool-bus-infra:docs/operating-rules.md
 
-# Scripts and receipts that a release sitting or a gate run writes or runs.
+# Scripts and receipts that exist to drive agent sessions.
 deny docs/runbooks/platform-release-sitting-*.md
 deny docs/runbooks/p0-sitting-*.md
 deny ci/gate-box/
@@ -69,7 +75,5 @@ deny scripts/gate-box*
 deny scripts/merge/squash-receipt*
 deny scripts/house-graph-key*
 deny tools/inventory-readiness/guard*.py
-deny scripts/lane-*
-deny scripts/lanes/
 
-# Admitted files. None yet.
+# Admitted paths. None yet.

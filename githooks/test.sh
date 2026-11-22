@@ -308,7 +308,6 @@ greatfallstoolbus.org .aider.conf.yml
 greatfallstoolbus.org .aiderignore
 greatfallstoolbus.org .aider.tags.cache.v3/cache.db
 greatfallstoolbus.org .mcp.json
-greatfallstoolbus.org plugins/scaffold-core/plugin.json
 greatfallstoolbus.org skills/release/SKILL.md
 greatfallstoolbus.org scripts/build-agent-skills.mjs
 greatfallstoolbus.org scripts/validate-skills.py
@@ -330,8 +329,33 @@ greatfallstoolbus.org scripts/gate-box.sh
 greatfallstoolbus.org scripts/merge/squash-receipt.py
 greatfallstoolbus.org scripts/house-graph-key.sh
 greatfallstoolbus.org scripts/house-graph-key.test.mts
-greatfallstoolbus.org scripts/lane-merge.sh
-greatfallstoolbus.org scripts/lanes/release.sh
+greatfallstoolbus.org AGENT.md
+greatfallstoolbus.org agents.md
+greatfallstoolbus.org Agents.md
+greatfallstoolbus.org claude.md
+greatfallstoolbus.org .Claude/settings.json
+greatfallstoolbus.org a/b/c/skill.md
+greatfallstoolbus.org .claude
+greatfallstoolbus.org .agents
+greatfallstoolbus.org packages/app/.claude
+greatfallstoolbus.org .githooks/AGENTS.md
+.github githooks/SKILL.md
+greatfallstoolbus.org .huskycat/CLAUDE.md
+greatfallstoolbus.org .github/workflows/.claude/settings.json
+greatfallstoolbus.org .claudeignore
+greatfallstoolbus.org .clinerules
+greatfallstoolbus.org .clinerules/house.md
+greatfallstoolbus.org .roo/rules/house.md
+greatfallstoolbus.org .kiro/steering/house.md
+greatfallstoolbus.org .continue/config.yaml
+greatfallstoolbus.org .opencode/agent/house.md
+greatfallstoolbus.org opencode.json
+greatfallstoolbus.org .junie/guidelines.md
+greatfallstoolbus.org .vscode/mcp.json
+greatfallstoolbus.org .github/agents/release.agent.md
+greatfallstoolbus.org apps/web/docs/agent-notes/x.md
+greatfallstoolbus.org plugins/scaffold-core/.claude-plugin/plugin.json
+greatfallstoolbus.org plugins/scaffold-core/skills/whoami/SKILL.md
 PATHS
 
 while read -r repo path; do
@@ -372,6 +396,20 @@ gftb-site src/content/goals/62-drafting-skillshare.md
 gftb-site scripts/lib/log-source-guard.mjs
 meta steering/operating-rules.md
 meta packets/printed/2026-09-11/RECEIPT.md
+greatfallstoolbus.org plugins/stripe/index.ts
+greatfallstoolbus.org plugins/stripe/plugin.json
+greatfallstoolbus.org skills/woodworking/intro.md
+greatfallstoolbus.org src/lib/skills/index.ts
+greatfallstoolbus.org docs/skills.md
+greatfallstoolbus.org .huskycat/config.toml
+greatfallstoolbus.org .vscode/settings.json
+greatfallstoolbus.org src/routes/membership/agents/+page.svelte
+greatfallstoolbus.org src/routes/oauth/authorize/+page.server.ts
+greatfallstoolbus.org scripts/lanes.json
+greatfallstoolbus.org scripts/landing-check.sh
+greatfallstoolbus.org scripts/lanesync.sh
+greatfallstoolbus.org docs/agent-notes.md
+greatfallstoolbus.org .claude-code.txt
 PATHS
 
 # Allow entries need a repository, an exact path, a ticket and a reason.
@@ -389,7 +427,8 @@ for entry in 'allow greatfallstoolbus.org:scripts/x.sh' \
   'allow scripts/x.sh TIN-3847 no repository' \
   'allow greatfallstoolbus.org:scripts/*.sh TIN-3847 a pattern' \
   'allow greatfallstoolbus.org:scripts/x.sh tin3847 bad ticket' \
-  'permit AGENTS.md'; do
+  'permit AGENTS.md' \
+  'keep .githooks/'; do
   cp "$list" "$alt"
   printf '%s\n' "$entry" >> "$alt"
   check "malformed entry rejected: $entry" 2 --any -- \
@@ -397,9 +436,6 @@ for entry in 'allow greatfallstoolbus.org:scripts/x.sh' \
 done
 check "a missing list is an error" 2 --any -- \
   bash -c ". '$hooks/_lib.sh'; printf 'AGENTS.md\n' | gftb_tooling_hits '$work/none.txt' meta"
-printf 'deny **/AGENTS.md\nkeep docs/\n' > "$alt"
-check "keep entries apply wherever they sit" 0 --quiet -- \
-  test "$(path_status "$alt" meta docs/AGENTS.md)" = clean
 
 # The pre-push hook warns about listed paths on organization pushes only.
 git switch -q -c feat/tooling "$base"
@@ -417,6 +453,14 @@ check "the fork's agents-overlay branch is not path checked" 0 --warns -- git pu
 out_lacks "the overlay push has no path warning" 'tooling-paths.txt'
 check "organization push after a fork push still warns" 1 --refused -- git push -q upstream feat/tooling
 out_has "the warning survives a remote-tracking fork ref" 'adds or changes AGENTS.md'
+git switch -q -c feat/unicode "$base"
+mkdir -p "docs/$(printf '\303\251')"
+printf 'notes\n' > "docs/$(printf '\303\251')/AGENTS.md"
+git add docs
+commit -m "docs: add a non-ASCII path"
+check "organization push with a non-ASCII listed path stays refused" 1 --refused -- git push -q upstream feat/unicode
+out_has "the warning names the non-ASCII path" "adds or changes docs/$(printf '\303\251')/AGENTS.md"
+
 git switch -q feat/ok
 check "organization push without listed paths has no path warning" 1 --refused -- git push -q upstream feat/ok
 out_lacks "a clean organization push names no path" 'tooling-paths.txt'
