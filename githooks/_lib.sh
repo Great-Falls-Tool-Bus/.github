@@ -91,3 +91,104 @@ gftb_chain() {
       ;;
   esac
 }
+
+# Print the anchored extended regular expression for a tooling-paths.txt
+# pattern. `*` and `?` stay inside one path segment, a leading `**/` lets the
+# rest start at any depth and a trailing `/` covers the directory below.
+gftb_glob_ere() {
+  local glob="$1" prefix='^' suffix='$' body
+  case "$glob" in
+    '**/'*) prefix='^(.*/)?'; glob="${glob#'**/'}" ;;
+  esac
+  case "$glob" in
+    */) suffix='/'; glob="${glob%/}" ;;
+  esac
+  # shellcheck disable=SC2016 # sed expressions, not shell expansions
+  body="$(printf '%s\n' "$glob" | sed -e 's/[].[^$()+{}|\\]/\\&/g' -e 's|\*|[^/]*|g' -e 's|?|[^/]|g')"
+  printf '%s%s%s\n' "$prefix" "$body" "$suffix"
+}
+
+# Match repository paths against tooling-paths.txt.
+# $1 names the list file and $2 the repository. Paths arrive on stdin, one per
+# line. Prints one line per denied path: path, rule and status, separated by
+# tabs. Status is `hit`, or `allowed` and the ticket for an allow entry.
+# Returns 2 when the list is missing or malformed.
+gftb_tooling_hits() {
+  local list="$1" repo work pass kind arg ticket reason scope pattern ere line=0 bad=0 path key
+  repo="$(printf '%s' "$2" | tr '[:upper:]' '[:lower:]')"
+  if [ ! -f "$list" ]; then
+    printf 'gftb-hooks: path list not found: %s\n' "$list" >&2
+    return 2
+  fi
+  work="$(mktemp -d "${TMPDIR:-/tmp}/gftb-paths.XXXXXX")" || return 2
+  cat > "$work/paths"
+  : > "$work/keep"
+  : > "$work/allow"
+  : > "$work/out"
+  while read -r kind arg ticket reason; do
+    line=$((line + 1))
+    case "$kind" in
+      "" | "#"*) continue ;;
+      deny | keep)
+        if [ -z "$arg" ] || [ -n "$ticket" ]; then
+          printf 'gftb-hooks: %s line %s: %s takes one pattern\n' "$list" "$line" "$kind" >&2
+          bad=1
+        fi
+        ;;
+      allow)
+        case "$arg" in
+          *:*) ;;
+          *) arg="" ;;
+        esac
+        case "$arg" in
+          *'*'* | *'?'* | *'['* | */) arg="" ;;
+        esac
+        if [ -z "$arg" ] || ! printf '%s\n' "$ticket" | grep -qE '^[A-Z][A-Z0-9]*-[0-9]+$' || [ -z "$reason" ]; then
+          printf 'gftb-hooks: %s line %s: allow needs REPO:PATH, a ticket such as TIN-1234 and a reason\n' "$list" "$line" >&2
+          bad=1
+        else
+          printf '%s:%s\t%s\n' "$(printf '%s' "${arg%%:*}" | tr '[:upper:]' '[:lower:]')" "${arg#*:}" "$ticket" >> "$work/allow"
+        fi
+        ;;
+      *)
+        printf 'gftb-hooks: %s line %s: unknown entry %s\n' "$list" "$line" "$kind" >&2
+        bad=1
+        ;;
+    esac
+  done < "$list"
+  if [ "$bad" -ne 0 ]; then
+    rm -rf "$work"
+    return 2
+  fi
+  # Keep entries apply first, wherever they sit in the list.
+  for pass in keep deny; do
+    while read -r kind arg ticket reason; do
+      [ "$kind" = "$pass" ] || continue
+      pattern="$arg"
+      case "$arg" in
+        *:*)
+          scope="$(printf '%s' "${arg%%:*}" | tr '[:upper:]' '[:lower:]')"
+          pattern="${arg#*:}"
+          [ "$scope" = "$repo" ] || continue
+          ;;
+      esac
+      ere="$(gftb_glob_ere "$pattern")"
+      if [ "$kind" = keep ]; then
+        grep -E -- "$ere" "$work/paths" >> "$work/keep" || true
+        continue
+      fi
+      grep -E -- "$ere" "$work/paths" | while IFS= read -r path; do
+        if grep -qxF -- "$path" "$work/keep"; then continue; fi
+        key="$repo:$path"
+        ticket="$(awk -F'\t' -v k="$key" '$1 == k { print $2; exit }' "$work/allow")"
+        if [ -n "$ticket" ]; then
+          printf '%s\t%s\tallowed %s\n' "$path" "$arg" "$ticket"
+        else
+          printf '%s\t%s\thit\n' "$path" "$arg"
+        fi
+      done >> "$work/out"
+    done < "$list"
+  done
+  awk -F'\t' '!seen[$1]++' "$work/out"
+  rm -rf "$work"
+}
