@@ -10,17 +10,22 @@ For repositories with a flake, enable `experimental-features = nix-command flake
 
 ## Fork first
 
-Clone your personal fork. Check that `origin` points to the fork and `upstream` to the organization.
+Clone your personal fork, named `<repo>-contrib`. Check that `origin` points to the fork and `upstream` to the organization.
 
-    gh repo fork Great-Falls-Tool-Bus/<repo> --clone --remote
-    cd <repo>
+    gh repo fork Great-Falls-Tool-Bus/<repo> --fork-name <repo>-contrib --clone --remote
+    cd <repo>-contrib
     git remote -v
+
+If your fork still has the plain name, rename it and point `origin` at the new name:
+
+    gh repo rename <repo>-contrib -R <your-login>/<repo>
+    git remote set-url origin https://github.com/<your-login>/<repo>-contrib.git
 
 If the repository has a flake, run `nix develop`. Where it tracks an `.envrc`, `direnv allow` enters the shell. Use its Just recipes inside that shell.
 
 Sync your fork and branch from its current main:
 
-    gh repo sync <your-login>/<repo> --source Great-Falls-Tool-Bus/<repo>
+    gh repo sync <your-login>/<repo>-contrib --source Great-Falls-Tool-Bus/<repo>
     git fetch origin
     git switch -c feat/short-slug origin/main
 
@@ -38,7 +43,7 @@ The shared hooks chain to a different global `core.hooksPath`. Lab’s global ho
 
 Huskycat formats staged comments before signing and adds its commit-message receipt. The installed Lab release skips partially staged files. A partially staged comment that still needs formatting can leave a signed commit without a receipt. The pilot candidate formats the staged snapshot and preserves unstaged work.
 
-The hooks refuse pushes to organization remotes, unsigned commits in the pushed range and AI attribution. GitHub merge commits have a signature exemption. The hooks warn about branch names, commit subjects and em dashes. On private GitHub Free repositories these local checks are advisory. Repository permissions control who can merge.
+The hooks refuse pushes to organization remotes, unsigned commits in the pushed range and AI attribution. GitHub merge commits have a signature exemption. The hooks warn about branch names, commit subjects and em dashes. They also warn when a push to the organization adds a path from `tooling-paths.txt` in the shared hooks. On private GitHub Free repositories these local checks are advisory. Repository permissions control who can merge.
 
 Where supplied, `just hooks-check` compares the installed hooks with the public mirror. `just hooks-test` runs the fixtures.
 
@@ -93,7 +98,12 @@ Paste the tested commit SHA, host operating system, exact command and final outp
 
 ## Agents
 
-Keep agent directives, skills, prompts and notes on your fork and out of upstream PRs. That includes `AGENTS.md`, `CLAUDE.md`, `.agents/` and `.claude/`. Use `.git/info/exclude` for untracked files in your clone. You sign and answer for changes you submit.
+Agent tooling stays on your `<repo>-contrib` fork, on its `agents-overlay` branch. It never lands on upstream or in an upstream PR. It covers two kinds of files:
+
+- Directives, skills, prompts, plugins and notes, such as `AGENTS.md`, `CLAUDE.md`, `.agents/` and `.claude/`.
+- Scripts and receipts that exist to drive agent sessions, such as release sitting packets, gate scripts and merge receipt scripts.
+
+`tooling-paths.txt` in the shared hooks lists the enforced paths. Hooks, CI and the product's own features stay out of it. Each exception names one exact path, a ticket and a reason. In meta, `just upstream-tooling-audit` checks every default branch against the list on meta's default branch, and `just upstream-tooling-audit pr <repo> <number>` checks one PR before merge. Use `.git/info/exclude` for untracked files in your clone. You sign and answer for changes you submit.
 
 ## How this text and the hooks are federated
 
