@@ -21,6 +21,10 @@ If your fork still has the plain name, rename it and point `origin` at the new n
     gh repo rename <repo>-contrib -R <your-login>/<repo>
     git remote set-url origin https://github.com/<your-login>/<repo>-contrib.git
 
+For an SSH remote, set `origin` to the SSH form instead:
+
+    git remote set-url origin git@github.com:<your-login>/<repo>-contrib.git
+
 If the repository has a flake, run `nix develop`. Where it tracks an `.envrc`, `direnv allow` enters the shell. Use its Just recipes inside that shell.
 
 Sync your fork and branch from its current main:

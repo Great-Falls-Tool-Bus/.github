@@ -143,6 +143,10 @@ gftb_tooling_hits() {
         case "$arg" in
           *'*'* | *'?'* | *'['* | */) arg="" ;;
         esac
+        # A `..` segment names no tracked path, so the entry admits nothing.
+        case "/${arg#*:}/" in
+          */../*) arg="" ;;
+        esac
         if [ -z "$arg" ] || ! printf '%s\n' "$ticket" | grep -qE '^[A-Z][A-Z0-9]*-[0-9]+$' || [ -z "$reason" ]; then
           printf 'gftb-hooks: %s line %s: allow needs REPO:PATH, a ticket such as TIN-1234 and a reason\n' "$list" "$line" >&2
           bad=1
